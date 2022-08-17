@@ -18,14 +18,11 @@ public class localGameTimer : NetworkBehaviour
         if(IsLocalPlayer){
             if(gameManager.hasStarted.Value){
                 gameTimerText.text =  gameManager.gameTimer.Value.ToString();
-                displayLoser.text = "";
                 waitForHostText.text = "";
             }
             else{
                 if(gameManager.finished.Value == true){
-                    if(gameManager.loser.Value.ToString().Length > 0){
-                        displayLoser.text = $"Game ended! Loser was {gameManager.loser.Value}";
-                    }
+                    gameTimerText.text = "";
                 }
                 if(IsHost){
                     waitForHostText.text = "Press Enter to start the game.";

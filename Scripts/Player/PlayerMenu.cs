@@ -8,14 +8,14 @@ public class PlayerMenu : NetworkBehaviour
     [SerializeField]
     private TextMeshProUGUI playersInGameText;
     public GameObject menuCanvas;
-    private PlayerMovement pm;
-    private CameraMovement cm;
+    public PlayerMovement pm;
+    public CameraMovement cm;
     public TagGamemode gameManager;
+    public PlayerData pd;
+    public bool busy;
     // Start is called before the first frame update
     void Start()
     {
-        cm = gameObject.GetComponentInChildren<CameraMovement>();
-        pm = gameObject.GetComponent<PlayerMovement>();
         gameManager = GameObject.Find("GameManager").GetComponent<TagGamemode>();
     }
 
@@ -23,7 +23,7 @@ public class PlayerMenu : NetworkBehaviour
     void Update()
     {
         if(IsLocalPlayer){
-            if(Input.GetKeyDown(KeyCode.Escape)){
+            if(Input.GetKeyDown(KeyCode.Escape) && !busy){
                 if(pm.inMenu){
                     hideMenu();
                 }
@@ -49,10 +49,18 @@ public class PlayerMenu : NetworkBehaviour
     }
     public void LeaveGame(){
         if(IsHost || IsServer){
+            if(gameManager.hasStarted.Value){
+                gameManager.endGameServerRpc();
+            }
             Debug.Log("server/host attempt to leave");
             LeaveGameServerRpc();
         }
         else if(IsClient){
+            if(pd.serverTagged.Value){
+                if(gameManager.getTaggedCount() == 0){
+                    gameManager.endGameServerRpc();
+                }
+            }
             Debug.Log("Client attempt to leave");
             NetworkManager.Singleton.Shutdown();
         }

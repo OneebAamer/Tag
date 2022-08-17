@@ -21,6 +21,7 @@ public class PlayerMovement : NetworkBehaviour
     public Vector3 hitPointNormal;
     private Sliding slideManager;
     public bool inMenu = false;
+    public bool isSprinting;
     public bool isSlopeSliding{
         get{
             if(isGrounded && Physics.Raycast(transform.position,Vector3.down,out RaycastHit slopeHit, 2f)){
@@ -32,11 +33,11 @@ public class PlayerMovement : NetworkBehaviour
             }
         }
     }
-
     Vector3 velocity;
     Vector3 slopeVelocity;
     public bool isGrounded;
     public NetworkVariable<Vector3> serverPosition = new NetworkVariable<Vector3>();
+    public NetworkVariable<Quaternion> serverRotation = new NetworkVariable<Quaternion>();
     void Start(){
         if(!IsLocalPlayer){
             playerCam.gameObject.SetActive(false);
@@ -60,16 +61,22 @@ public class PlayerMovement : NetworkBehaviour
     void UpdateClient()
     {
         if(IsLocalPlayer){
+            updateClientPositionServerRpc(transform.position.x, transform.position.y, transform.position.z);
             isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundmask) || slideManager.sliding;
             if(isGrounded && velocity.y < 0)
             {
                 velocity = new Vector3(0f,-5f,0f);
             }
-
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
             if(!isGrounded){
                 x= x/2;
+            }
+            if(x == 0 && z == 0){
+                isSprinting = false;
+            }
+            if(Input.GetKey(KeyCode.LeftShift)){
+                isSprinting = true;
             }
             Vector3 move = new Vector3();
             if(!inMenu){
@@ -79,7 +86,7 @@ public class PlayerMovement : NetworkBehaviour
             if ((slideManager.isCrouching || slideManager.isStuck) && isGrounded){
                 controller.Move(move * speed * .5f * Time.deltaTime);
             }
-            else if(Input.GetKey(KeyCode.LeftShift)){
+            else if(isSprinting){
                 controller.Move(move * speed * 1.5f * Time.deltaTime);
             }
             else{
@@ -98,15 +105,24 @@ public class PlayerMovement : NetworkBehaviour
                 slopeVelocity = Vector3.zero;
             }
             controller.Move(slopeVelocity * Time.deltaTime);
-            updateClientPositionServerRpc(transform.position.x, transform.position.y, transform.position.z);
         }
         else{
             transform.position = serverPosition.Value;
+            playerBody.transform.rotation = serverRotation.Value;
         }
     }
     public Vector3 getSlopeMoveDirection(Vector3 direction){
         return Vector3.ProjectOnPlane(direction, hitPointNormal).normalized;
     }
+    void OnCollisionEnter(Collision collision)
+        {
+            Debug.Log("colliding");
+            if (collision.gameObject.tag == "Player")
+            {
+                Debug.Log("colliding w player");
+                Physics.IgnoreCollision(collision.gameObject.GetComponent<CharacterController>(), this.GetComponent<CharacterController>());
+            }
+        }
     [ServerRpc]
     public void updateClientPositionServerRpc(float x, float y, float z){
         serverPosition.Value = new Vector3(x,y,z);

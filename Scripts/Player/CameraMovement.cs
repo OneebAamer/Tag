@@ -6,9 +6,8 @@ public class CameraMovement : NetworkBehaviour
 {
     private float sensitivity;
     public Transform playerBody;
+    public PlayerMovement pm;
     float xRotation = 0f;
-    public NetworkVariable<Quaternion> serverRotation = new NetworkVariable<Quaternion>();
-
 
     void Start() {
         if(IsLocalPlayer){
@@ -29,12 +28,9 @@ public class CameraMovement : NetworkBehaviour
             playerBody.Rotate(Vector3.up * mouseX);
             updateClientRotationServerRpc(playerBody.rotation);
         }
-        else{
-            transform.rotation = serverRotation.Value;
-        }
     }
     [ServerRpc]
     void updateClientRotationServerRpc(Quaternion locRotation){
-        serverRotation.Value = locRotation;
+        pm.serverRotation.Value = locRotation;
     }
 }

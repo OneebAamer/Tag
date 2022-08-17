@@ -18,6 +18,7 @@ public class PlayerData : NetworkBehaviour
     public LayerMask taggedLayer;
     public LayerMask untaggedLayer;
     public TMP_Text crosshair;
+    public NetworkVariable<int> points = new NetworkVariable<int>();
 
     // Start is called before the first frame update
     void Start()

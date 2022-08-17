@@ -48,6 +48,7 @@ public class Sliding : NetworkBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
         if (isStuck){
+            pm.isSprinting = false;
             if(!Physics.Raycast(playerCam.transform.position, Vector3.up, 0.5f)){
                 StartCoroutine(setPlayerStandHeight());
                 isStuck = false;
@@ -56,12 +57,12 @@ public class Sliding : NetworkBehaviour
         }
         if(bufferSlide &&pm.isGrounded){
             bufferSlide = false;
-            if(Input.GetKey(slideKey) && Input.GetKey(KeyCode.LeftShift) && (horizontalInput != 0 || verticalInput != 0)){
+            if(Input.GetKey(slideKey) && pm.isSprinting && (horizontalInput != 0 || verticalInput != 0)){
                 isCrouching = false;
                 startSlide();
             }
         }
-        if(Input.GetKeyDown(slideKey) && Input.GetKey(KeyCode.LeftShift) && pm.isGrounded && (horizontalInput != 0 || verticalInput != 0)){
+        if(Input.GetKeyDown(slideKey) && pm.isSprinting && pm.isGrounded && (horizontalInput != 0 || verticalInput != 0)){
             startSlide();
         }
         else if(Input.GetKeyDown(slideKey)){
